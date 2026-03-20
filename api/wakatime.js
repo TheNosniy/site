@@ -1,7 +1,9 @@
 // api/wakatime.js
-const WAKA_KEY = 'waka_f34af810-31e5-4d81-9f82-c8cfd1977f99';
+const https = require('https');
 
-module.exports = async function handler(req, res) {
+const WAKA_KEY = 'waka_eacf6e31-a539-42ed-a0eb-63040f7ef2e2';
+
+module.exports = function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -10,26 +12,39 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  try {
-    const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  const encoded = Buffer.from(WAKA_KEY).toString('base64');
 
-    // Правильный URL: api.wakatime.com (не wakatime.com)
-    const url = `https://api.wakatime.com/api/v1/users/current/summaries?start=${today}&end=${today}`;
+  const options = {
+    hostname: 'api.wakatime.com',
+    path: `/api/v1/users/current/summaries?start=${today}&end=${today}`,
+    method: 'GET',
+    headers: {
+      'Authorization': 'Basic ' + encoded,
+      'Content-Type': 'application/json'
+    }
+  };
 
-    // Правильное кодирование: просто apiKey без ":"
-    const encoded = Buffer.from(WAKA_KEY).toString('base64');
+  const request = https.request(options, function(response) {
+    let data = '';
 
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': 'Basic ' + encoded,
-        'Content-Type': 'application/json'
-      }
+    response.on('data', function(chunk) {
+      data += chunk;
     });
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    response.on('end', function() {
+      try {
+        const json = JSON.parse(data);
+        res.status(200).json(json);
+      } catch (e) {
+        res.status(500).json({ error: 'Parse error', raw: data });
+      }
+    });
+  });
 
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+  request.on('error', function(err) {
+    res.status(500).json({ error: err.message });
+  });
+
+  request.end();
 };
