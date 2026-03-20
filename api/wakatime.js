@@ -1,7 +1,7 @@
 // api/wakatime.js
 const https = require('https');
 
-const WAKA_KEY = 'waka_83f0384b-15f5-4fdd-8ae5-c8ddb4871936';
+const WAKA_KEY = 'waka_4f8c6a40-8d9a-4a10-b8b4-78e5aa07fd15';
 
 module.exports = function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
