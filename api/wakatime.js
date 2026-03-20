@@ -12,14 +12,17 @@ module.exports = async function handler(req, res) {
 
   try {
     const today = new Date().toISOString().split('T')[0];
-    const url = `https://wakatime.com/api/v1/users/current/summaries?start=${today}&end=${today}`;
 
-    // WakaTime требует Basic Auth: base64(apikey:)
-    const encoded = Buffer.from(WAKA_KEY + ':').toString('base64');
+    // Правильный URL: api.wakatime.com (не wakatime.com)
+    const url = `https://api.wakatime.com/api/v1/users/current/summaries?start=${today}&end=${today}`;
+
+    // Правильное кодирование: просто apiKey без ":"
+    const encoded = Buffer.from(WAKA_KEY).toString('base64');
 
     const response = await fetch(url, {
       headers: {
-        'Authorization': 'Basic ' + encoded
+        'Authorization': 'Basic ' + encoded,
+        'Content-Type': 'application/json'
       }
     });
 
